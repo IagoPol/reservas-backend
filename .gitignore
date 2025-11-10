@@ -52,3 +52,7 @@ CodeCoverage/
 *.VisualState.xml
 TestResult.xml
 nunit-*.xml
+
+# .vs/ para evitar problemas asociados al stagear cambios (pej. .vs/backend/FileContentIndex/alfanumbercode.vsidx)
+# This tells Git to ignore everything inside the .vs folder, including the FileContentIndex files.
+.vs/
