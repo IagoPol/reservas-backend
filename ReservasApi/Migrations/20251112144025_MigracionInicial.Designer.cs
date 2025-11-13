@@ -12,8 +12,8 @@ using ReservasApi.Data;
 namespace ReservasApi.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251107130944_PrimeraMigracion")]
-    partial class PrimeraMigracion
+    [Migration("20251112144025_MigracionInicial")]
+    partial class MigracionInicial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -45,7 +45,8 @@ namespace ReservasApi.Migrations
 
                     b.HasKey("CancelacionId");
 
-                    b.HasIndex("ReservaId");
+                    b.HasIndex("ReservaId")
+                        .IsUnique();
 
                     b.ToTable("Cancelaciones");
                 });
@@ -98,7 +99,8 @@ namespace ReservasApi.Migrations
 
                     b.HasKey("PagoId");
 
-                    b.HasIndex("ReservaId");
+                    b.HasIndex("ReservaId")
+                        .IsUnique();
 
                     b.ToTable("Pagos");
                 });
@@ -113,35 +115,29 @@ namespace ReservasApi.Migrations
 
                     b.Property<string>("Dni")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("EspacioId")
-                        .HasColumnType("int");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<DateTime>("FechaHora")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("InstalacionId")
+                    b.Property<int>("InstalacionId")
                         .HasColumnType("int");
 
                     b.Property<int>("NumeroAsistentes")
                         .HasColumnType("int");
 
-                    b.Property<string>("UsuarioId")
-                        .HasColumnType("nvarchar(450)");
-
                     b.HasKey("ReservaId");
 
-                    b.HasIndex("InstalacionId");
+                    b.HasIndex("Dni");
 
-                    b.HasIndex("UsuarioId");
+                    b.HasIndex("InstalacionId");
 
                     b.ToTable("Reservas");
                 });
 
             modelBuilder.Entity("ReservasApi.Modelos.Usuario", b =>
                 {
-                    b.Property<string>("UsuarioId")
+                    b.Property<string>("Dni")
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Contrasinal")
@@ -156,8 +152,8 @@ namespace ReservasApi.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime>("FechaNacimiento")
-                        .HasColumnType("datetime2");
+                    b.Property<DateOnly>("FechaNacimiento")
+                        .HasColumnType("date");
 
                     b.Property<DateTime>("FechaRegistro")
                         .HasColumnType("datetime2");
@@ -170,7 +166,7 @@ namespace ReservasApi.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("UsuarioId");
+                    b.HasKey("Dni");
 
                     b.ToTable("Usuarios");
                 });
@@ -178,8 +174,8 @@ namespace ReservasApi.Migrations
             modelBuilder.Entity("ReservasApi.Modelos.Cancelacion", b =>
                 {
                     b.HasOne("ReservasApi.Modelos.Reserva", "Reserva")
-                        .WithMany()
-                        .HasForeignKey("ReservaId")
+                        .WithOne("Cancelacion")
+                        .HasForeignKey("ReservasApi.Modelos.Cancelacion", "ReservaId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -189,8 +185,8 @@ namespace ReservasApi.Migrations
             modelBuilder.Entity("ReservasApi.Modelos.Pago", b =>
                 {
                     b.HasOne("ReservasApi.Modelos.Reserva", "Reserva")
-                        .WithMany()
-                        .HasForeignKey("ReservaId")
+                        .WithOne("Pago")
+                        .HasForeignKey("ReservasApi.Modelos.Pago", "ReservaId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -199,18 +195,33 @@ namespace ReservasApi.Migrations
 
             modelBuilder.Entity("ReservasApi.Modelos.Reserva", b =>
                 {
-                    b.HasOne("ReservasApi.Modelos.Instalacion", null)
+                    b.HasOne("ReservasApi.Modelos.Usuario", "Usuario")
                         .WithMany("Reservas")
-                        .HasForeignKey("InstalacionId");
+                        .HasForeignKey("Dni")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
-                    b.HasOne("ReservasApi.Modelos.Usuario", null)
+                    b.HasOne("ReservasApi.Modelos.Instalacion", "Instalacion")
                         .WithMany("Reservas")
-                        .HasForeignKey("UsuarioId");
+                        .HasForeignKey("InstalacionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Instalacion");
+
+                    b.Navigation("Usuario");
                 });
 
             modelBuilder.Entity("ReservasApi.Modelos.Instalacion", b =>
                 {
                     b.Navigation("Reservas");
+                });
+
+            modelBuilder.Entity("ReservasApi.Modelos.Reserva", b =>
+                {
+                    b.Navigation("Cancelacion");
+
+                    b.Navigation("Pago");
                 });
 
             modelBuilder.Entity("ReservasApi.Modelos.Usuario", b =>

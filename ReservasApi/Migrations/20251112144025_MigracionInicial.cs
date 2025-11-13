@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace ReservasApi.Migrations
 {
     /// <inheritdoc />
-    public partial class PrimeraMigracion : Migration
+    public partial class MigracionInicial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -31,18 +31,18 @@ namespace ReservasApi.Migrations
                 name: "Usuarios",
                 columns: table => new
                 {
-                    UsuarioId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Dni = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     NombreCompleto = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Email = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Telefono = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Domicilio = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    FechaNacimiento = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    FechaNacimiento = table.Column<DateOnly>(type: "date", nullable: false),
                     FechaRegistro = table.Column<DateTime>(type: "datetime2", nullable: false),
                     Contrasinal = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Usuarios", x => x.UsuarioId);
+                    table.PrimaryKey("PK_Usuarios", x => x.Dni);
                 });
 
             migrationBuilder.CreateTable(
@@ -53,10 +53,8 @@ namespace ReservasApi.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     NumeroAsistentes = table.Column<int>(type: "int", nullable: false),
                     FechaHora = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    Dni = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    EspacioId = table.Column<int>(type: "int", nullable: false),
-                    InstalacionId = table.Column<int>(type: "int", nullable: true),
-                    UsuarioId = table.Column<string>(type: "nvarchar(450)", nullable: true)
+                    Dni = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    InstalacionId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -65,12 +63,14 @@ namespace ReservasApi.Migrations
                         name: "FK_Reservas_Instalaciones_InstalacionId",
                         column: x => x.InstalacionId,
                         principalTable: "Instalaciones",
-                        principalColumn: "InstalacionId");
+                        principalColumn: "InstalacionId",
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_Reservas_Usuarios_UsuarioId",
-                        column: x => x.UsuarioId,
+                        name: "FK_Reservas_Usuarios_Dni",
+                        column: x => x.Dni,
                         principalTable: "Usuarios",
-                        principalColumn: "UsuarioId");
+                        principalColumn: "Dni",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -119,22 +119,24 @@ namespace ReservasApi.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_Cancelaciones_ReservaId",
                 table: "Cancelaciones",
-                column: "ReservaId");
+                column: "ReservaId",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Pagos_ReservaId",
                 table: "Pagos",
-                column: "ReservaId");
+                column: "ReservaId",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Reservas_Dni",
+                table: "Reservas",
+                column: "Dni");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Reservas_InstalacionId",
                 table: "Reservas",
                 column: "InstalacionId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Reservas_UsuarioId",
-                table: "Reservas",
-                column: "UsuarioId");
         }
 
         /// <inheritdoc />

@@ -7,6 +7,13 @@ var builder = WebApplication.CreateBuilder(args); // esto ya venía por defecto.
 
 // Add controllers (this enables the [ApiController] controllers)
 builder.Services.AddControllers(); //.AddOpenApi();
+    /*
+    .AddJsonOptions(opciones => // esto lo añado con la intención de que get api reservas no me de cycle problem (el cual me impide ver la consulta)
+    {
+        opciones.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve;
+        opciones.JsonSerializerOptions.WriteIndented = true;
+    });
+    */
 
 // Add EF Core and configure SQL Server using the connection string from appsettings.json (hijo de 'ReservasApi' folder -al igual que Program.cs-, hija de 'backend' folder)
 builder.Services.AddDbContext<AppDbContext>(opciones =>

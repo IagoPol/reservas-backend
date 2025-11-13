@@ -28,7 +28,7 @@ namespace ReservasApi.Controllers
             await _contexto.SaveChangesAsync();
 
             // CreatedAtAction automatically returns '201 Created' + Location header:
-            return CreatedAtAction(nameof(GetUsuario), new { id = nuevouser.UsuarioId }, nuevouser);
+            return CreatedAtAction(nameof(GetUsuario), new { id = nuevouser.Dni }, nuevouser);
         } // método GetUsuario lo defino más abajo
 
         // GET: api/usuarios
@@ -59,7 +59,7 @@ namespace ReservasApi.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> ActualizarUsuario(string idurl, Usuario usuario)
         {
-            if (idurl != usuario.UsuarioId)
+            if (idurl != usuario.Dni)
             { 
                 return BadRequest("El ID de la URL NO coincide con el ID del usuario");
             }
@@ -72,7 +72,7 @@ namespace ReservasApi.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!_contexto.Usuarios.Any(e => e.UsuarioId == idurl))
+                if (!_contexto.Usuarios.Any(e => e.Dni == idurl))
                 {
                     return NotFound();
                 }
