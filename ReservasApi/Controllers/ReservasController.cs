@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ReservasApi.Data;
+using ReservasApi.Eventos;
 using ReservasApi.Modelos;
 using ReservasApi.Modelos.DTO;
 
@@ -12,11 +13,14 @@ namespace ReservasApi.Controllers
     {
         // Propiedad privada y de solo lectura:
         private readonly AppDbContext _contexto;
+        // Propiedad que pongo para "Inject and call the Kafka producer in my ReservasController":
+        private readonly IServicioProductorKafka _productorKafka; // _kafkaProducer
 
         // constructor parametrizado con la propiedad:
-        public ReservasController(AppDbContext contexto)
-        {
+        public ReservasController(AppDbContext contexto, IServicioProductorKafka productorKafka) // el segundo param lo añado para "Inject and call the Kafka producer in my ReservasController"
+        { // los valores pasados como params del constructor se ponen como valores de las propiedades de la clase ReservasController:
             _contexto = contexto;
+            _productorKafka = productorKafka;
         }
 
         // Los HTTP methods POST, GET, PUT, DELETE correspond to Create, Read, Update and Delete, respectively. CRUD are the 4 basic operations you can perform on data in a database.
@@ -52,8 +56,9 @@ namespace ReservasApi.Controllers
             // creates and saves a new Reserva en otras palabras Add and save:
             _contexto.Reservas.Add(nuevareserva); // EFCore adds it (la nueva reserva) to the database (Add + SaveChangesAsync()).
             await _contexto.SaveChangesAsync(); // after SaveChangesAsync(), the navigation properties are available and populated in memory. If you GET /api/reservas, you'll see the linked data (if you use .Include(...) in your GET).
+            // ese SaveChangesAsync() saves the new booking, después desto podremos poner la línea de código que publica el evento kafka (en concreto lo hago después del map to dto code)
 
-            // Map to DTO for response:
+            // Map to DTO for response (doesn't affect DB or Kafka):
             var reservaDto = new ReservaLeerDto
             {
                 ReservaId = nuevareserva.ReservaId,
@@ -75,12 +80,12 @@ namespace ReservasApi.Controllers
                 }
             };
 
-            // (Optional but clean) reload navigation properties to ensure they are fully populated and also ensures Swagger shows them in the response:
-            // await _contexto.Entry(nuevareserva).Reference(r => r.Usuario).LoadAsync();
-            // await _contexto.Entry(nuevareserva).Reference(r => r.Instalacion).LoadAsync();
-
-            // Publish event to Kafka topic "reservas.creadas"
-            // awai _kafkaProducer.PublishReservaCreadaAsync(nuevareserva);
+            // Placing Kafka publishing after the mapping to DTO is perfectly fine.
+            // Publish Kafka event (un valid placement de esta línea de código es después del "map to DTO" code -en especial debe ir después del await _contexto_SaveChangesAsync()- pero antes del return CreatedAtAction i.e. before returning the DTO):
+            await _productorKafka.PublicarReservaCreadaAsync(nuevareserva); // awaits the message to ensure it's successfully sent before returning 201 Created.
+            // la anterior línea es reemplazable por la siguiente:
+            // _ = _productorKafka.PublicarReservaCreadaAsync(nuevareserva); esto es la versión "fire-and-forget" of the Kafka call, se usa if...
+            //...if you don't want to block the HTTP response while Kafka is publishing
 
             // Return Created (201)
             return CreatedAtAction(nameof(GetReservas), new { id = nuevareserva.ReservaId }, reservaDto); // antes del 13 de nov aquí ponía nameof(GetReserva)

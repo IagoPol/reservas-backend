@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore; // aparece al pone UseSqlServer
 using ReservasApi.Data;
+using ReservasApi.Eventos; // puse esta línea al poner con "Register the Kafka producer in DI (Dependency Injection)"
 
 var builder = WebApplication.CreateBuilder(args); // esto ya venía por defecto.
 
@@ -23,6 +24,9 @@ builder.Services.AddDbContext<AppDbContext>(opciones =>
 // Add Swagger/OpenAPI support for testing your endpoints easily
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(); // requires installation of the Swagger (Swashbuckle) NuGet package.
+
+// Register the Kafka producer in DI, para ello añado esta línea antes de var app = builder.Build() y después de var builder = WebApplication.CreateBuilder(args):
+builder.Services.AddSingleton<IServicioProductorKafka, ProductorKafka>(); // ProductorKafka es una clase creada por mí que implementa la interfaz IServicioProductorKafka tmb creada por mí y que simplemente cuenta con un miembro, que es un método.
 
 var app = builder.Build(); // ya viene por defecto.
 
