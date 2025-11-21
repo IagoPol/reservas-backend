@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ReservasApi.Data;
-using ReservasApi.Eventos;
+// using ReservasApi.Eventos;
 using ReservasApi.Modelos;
 using ReservasApi.Modelos.DTO;
 
@@ -14,13 +14,14 @@ namespace ReservasApi.Controllers
         // Propiedad privada y de solo lectura:
         private readonly AppDbContext _contexto;
         // Propiedad que pongo para "Inject and call the Kafka producer in my ReservasController":
-        private readonly IServicioProductorKafka _productorKafka; // _kafkaProducer
+        // private readonly IServicioProductorKafka _productorKafka; // _kafkaProducer
+        // COMENTO LA LÍNEA ANTERIOR DE CARA A EMPEZAR CON TESTS UNITARIOS QUE NO INTERFIERA KAFKA CON ELLOS.
 
-        // constructor parametrizado con la propiedad:
-        public ReservasController(AppDbContext contexto, IServicioProductorKafka productorKafka) // el segundo param lo añado para "Inject and call the Kafka producer in my ReservasController"
+        // constructor parametrizado con la propiedad: (COMENTO el segundo param DE CARA A EMPEZAR CON TESTS UNITARIOS)
+        public ReservasController(AppDbContext contexto) //, IServicioProductorKafka productorKafka) // el segundo param lo añado para "Inject and call the Kafka producer in my ReservasController"
         { // los valores pasados como params del constructor se ponen como valores de las propiedades de la clase ReservasController:
             _contexto = contexto;
-            _productorKafka = productorKafka;
+            // _productorKafka = productorKafka; // COMENTO ESTA LÍNEA DE CARA A EMPEZAR CON TESTS UNITARIOS QUE NO INTERFIERA KAFKA CON ELLOS.
         }
 
         // Los HTTP methods POST, GET, PUT, DELETE correspond to Create, Read, Update and Delete, respectively. CRUD are the 4 basic operations you can perform on data in a database.
@@ -82,7 +83,10 @@ namespace ReservasApi.Controllers
 
             // Placing Kafka publishing after the mapping to DTO is perfectly fine.
             // Publish Kafka event (un valid placement de esta línea de código es después del "map to DTO" code -en especial debe ir después del await _contexto_SaveChangesAsync()- pero antes del return CreatedAtAction i.e. before returning the DTO):
-            await _productorKafka.PublicarReservaCreadaAsync(nuevareserva); // awaits the message to ensure it's successfully sent before returning 201 Created.
+            
+            //await _productorKafka.PublicarReservaCreadaAsync(nuevareserva); // awaits the message to ensure it's successfully sent before returning 201 Created.
+            // COMENTO LA ANTERIOR LÍNEA DE CARA A IGNORAR KAFKA EN TESTS UNITARIOS (ya que todavía no conseguí que el consumidor kafka muestre output al hacer post con swagger entonces digamos que ya sé que debería fallar lo de kafka si lo testeo).
+            
             // la anterior línea es reemplazable por la siguiente:
             // _ = _productorKafka.PublicarReservaCreadaAsync(nuevareserva); esto es la versión "fire-and-forget" of the Kafka call, se usa if...
             //...if you don't want to block the HTTP response while Kafka is publishing

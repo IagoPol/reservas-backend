@@ -1,4 +1,6 @@
-﻿using Confluent.Kafka; // me lo reconoce/autocompleta post-hacer dotnet add package Confluent.Kafka estando situado en carpeta padre del .csproj file de mi proyecto backend.
+﻿/*
+// COMENTO TODO ESTE CÓDIGO DE CARA A EMPEZAR CON TESTS UNITARIOS IGNORAR TODO LO DE KAFKA.
+using Confluent.Kafka; // me lo reconoce/autocompleta post-hacer dotnet add package Confluent.Kafka estando situado en carpeta padre del .csproj file de mi proyecto backend.
 using System.Text.Json;
 using ReservasApi.Modelos; // para poder poner ": IServicioProductorKafa" sin error.
 
@@ -58,3 +60,4 @@ namespace ReservasApi.Eventos // o ReservasApi.Services o ReservasApi.Messages
 
     } // final de la clase ProductorKafka.
 }
+*/
