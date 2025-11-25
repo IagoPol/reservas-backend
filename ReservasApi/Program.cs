@@ -1,15 +1,22 @@
 using Microsoft.EntityFrameworkCore; // aparece al pone UseSqlServer
 using ReservasApi.Data;
-// using ReservasApi.Eventos; // puse esta línea al poner con "Register the Kafka producer in DI (Dependency Injection)"
 
-var builder = WebApplication.CreateBuilder(args); // esto ya venía por defecto.
+// using ReservasApi.Eventos; // puse esta lï¿½nea al poner con "Register the Kafka producer in DI (Dependency Injection)"
+
+// para autenticaciÃ³n:
+using Microsoft.AspNetCore.Authentication.JwtBearer; // no intellisense autocompletion
+using Microsoft.IdentityModel.Tokens; // no intellisense autocompletion
+using System.Text; // intellisense me acierta el Text.
+using ReservasApi.Servicios;
+
+var builder = WebApplication.CreateBuilder(args); // esto ya venï¿½a por defecto.
 
 // 1. Add services to the container.
 
 // Add controllers (this enables the [ApiController] controllers)
 builder.Services.AddControllers(); //.AddOpenApi();
     /*
-    .AddJsonOptions(opciones => // esto lo añado con la intención de que get api reservas no me de cycle problem (el cual me impide ver la consulta)
+    .AddJsonOptions(opciones => // esto lo aï¿½ado con la intenciï¿½n de que get api reservas no me de cycle problem (el cual me impide ver la consulta)
     {
         opciones.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve;
         opciones.JsonSerializerOptions.WriteIndented = true;
@@ -25,23 +32,49 @@ builder.Services.AddDbContext<AppDbContext>(opciones =>
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(); // requires installation of the Swagger (Swashbuckle) NuGet package.
 
-// Register the Kafka producer in DI, para ello añado esta línea antes de var app = builder.Build() y después de var builder = WebApplication.CreateBuilder(args):
-//builder.Services.AddSingleton<IServicioProductorKafka, ProductorKafka>(); // ProductorKafka es una clase creada por mí que implementa la interfaz IServicioProductorKafka tmb creada por mí y que simplemente cuenta con un miembro, que es un método.
-// COMENTO LA LÍNEA ANTERIOR DE CARA A EMPEZAR CON TESTS UNITARIOS IGNORAR TODO LO DE KAFKA.
+// Register the Kafka producer in DI, para ello aï¿½ado esta lï¿½nea antes de var app = builder.Build() y despuï¿½s de var builder = WebApplication.CreateBuilder(args):
+//builder.Services.AddSingleton<IServicioProductorKafka, ProductorKafka>(); // ProductorKafka es una clase creada por mï¿½ que implementa la interfaz IServicioProductorKafka tmb creada por mï¿½ y que simplemente cuenta con un miembro, que es un mï¿½todo.
+// COMENTO LA Lï¿½NEA ANTERIOR DE CARA A EMPEZAR CON TESTS UNITARIOS IGNORAR TODO LO DE KAFKA.
 
-var app = builder.Build(); // ya viene por defecto.
+// Insert the authentication setup above "app.Build()", along with your other builder.Services.*
+// JWT Authentication:
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(opciones =>
+    {
+        opciones.TokenValidationParameters = new TokenValidationParameters // me autocompletÃ³ el primer TVP, no el segundo.
+        {
+            ValidateIssuer = false,
+            ValidateAudience = false,
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(
+                    builder.Configuration["Jwt:Key"]
+                        ?? throw new Exception("Missing Jwt:Key in configuration") // because my appsettings.json contains "Jwt:Key", the left side of ?? is NOT null, therefore the exception is NOT thrown, the message is NEVER shown.
+                )
+            )
+        };
+    }); // lo que viene justo despuÃ©s de AddJwtBearer es una lambda that configures TokenValidationParameters.
+builder.Services.AddAuthorization();
+builder.Services.AddScoped<AuthService>();
 
-// 2. Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment()) // esto ya venía por defecto
+// 2. Build the app
+// in ASP.NET Core (including .NET 9), all service registrations must be added before:
+var app = builder.Build(); // ya viene por defecto. Esta lÃ­nea es toda la secciÃ³n 2. Build the app
+
+// 2. Configure the HTTP request pipeline. 
+// A 25 de nov 2025 (al estar con lo de la autenticaciÃ³n), chatgpt a esto le llama 3. Configure middleware
+if (app.Environment.IsDevelopment()) // esto ya venï¿½a por defecto
 {
-    //app.MapOpenApi(); este es el único que venía por defecto.
+    //app.MapOpenApi(); este es el ï¿½nico que venï¿½a por defecto.
     // Enable Swagger UI only in development :
     app.UseSwagger(); // esto lo puse yo
     app.UseSwaggerUI(); // esto lo puse yo
 }
 
-app.UseHttpsRedirection(); // ya venía por defecto.
+app.UseHttpsRedirection(); // ya venï¿½a por defecto.
 
+// Authentication must come before Authorization:
+app.UseAuthentication();
 app.UseAuthorization(); // lo puse yo.
 
 // Map controller routes (this enables your /api/... endpoints)
@@ -49,7 +82,7 @@ app.MapControllers(); // lo puse yo.
 
 app.Run(); // lo puse yo.
 
-/* Todo esto venía por defecto.
+/* Todo esto venï¿½a por defecto.
     var summaries = new[]
     {
         "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
