@@ -66,6 +66,7 @@ namespace ReservasApi.Controllers
         } // final de función Registrar i.e. final de POST: api/auth/register
 
         // POST: api/auth/login
+        [HttpPost("loguear")]
         public async Task<IActionResult> Loguear(LoginDto ldto)
         {
             // 1. Get user from DB:
