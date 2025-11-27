@@ -20,6 +20,7 @@ namespace ReservasApi.Controllers
 
         // POST (Create), GET (Read), PUT (Updaet), DELETE (idem) respecto de la tabla de usuarios:
 
+        /*
         // POST: api/usuarios
         [HttpPost]
         public async Task<ActionResult<Usuario>> CrearUsuario(Usuario nuevouser)
@@ -30,6 +31,7 @@ namespace ReservasApi.Controllers
             // CreatedAtAction automatically returns '201 Created' + Location header:
             return CreatedAtAction(nameof(GetUsuario), new { id = nuevouser.Dni }, nuevouser);
         } // método GetUsuario lo defino más abajo
+        */
 
         // GET: api/usuarios
         // GetUsuarios tiene por propósito retornar una lista de todos los usuarios from the database.
