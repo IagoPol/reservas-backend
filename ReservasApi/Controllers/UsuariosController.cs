@@ -38,8 +38,8 @@ namespace ReservasApi.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Usuario>>> GetUsuarios()
         {
-            var usuarios = await _contexto.Usuarios.ToListAsync();
-            return Ok(usuarios);
+            var usuarios = await _contexto.Usuarios.ToListAsync(); // produces a List<Usuario>
+            return Ok(usuarios); // usuarios is a List<Usuario>
         }
 
         // GET: api/usuarios/{id}
