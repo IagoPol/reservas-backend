@@ -4,6 +4,7 @@ using ReservasApi.Controllers;
 using ReservasApi.Data;
 using ReservasApi.Modelos;
 using ReservasApi.Modelos.DTO;
+using Xunit.Sdk;
 
 // using System.Linq;
 // using System.Text;
@@ -88,5 +89,74 @@ namespace ReservasApi.Tests
         } // final de [FACT] GetReservas_RetornaAllReservas()
 
         // You can add more [Fact] methods here for POST, GET by ID, PUT, DELETE
+
+        // POST:
+        [Fact]
+        public async Task CrearReserva_AgregaReservaAndRetornaCreated()
+        {
+            // Arrange: in-memory DbContext
+            using var c = TestHelpers.GetInMemoryDbContext();
+
+            // Seed Usuario relacionado (el de la fk dni):
+            var user = new Usuario
+            { 
+                Dni = "99988877A",
+                NombreCompleto = "Laura Martinez",
+                Email = "laura@gmail.com",
+                Telefono = "600123456",
+                Domicilio = "Calle Equis 10, Lugo",
+                FechaNacimiento = new DateOnly(1992,05,12),
+                FechaRegistro = DateTime.Now,
+                PasswordHash = new byte[] { 1 },
+                PasswordSalt = new byte[] { 2 },
+            };
+            c.Usuarios.Add(user);
+
+            // Seed Instalacion relacionada (la de la fk InstalacionId):
+            var inst = new Instalacion
+            {
+                Localizacion = "Calle Acacias 3, Madrid",
+                CapacidadMaxima = 40,
+                PrecioHora = 18.0,
+                Tipo = true
+            };
+            c.Instalaciones.Add(inst);
+
+            await c.SaveChangesAsync();
+
+            var controlador = new ReservasController(c);
+
+            // DTO to send in POST:
+            var dto = new ReservaCrearDto
+            {
+                Dni = user.Dni,
+                InstalacionId = inst.InstalacionId,
+                FechaHora = new DateTime(2025,12,20,14,0,0),
+                NumeroAsistentes = 5
+            };
+
+            // Act:
+            var resultado = await controlador.CrearReserva(dto);
+
+            // Assert: response type:
+            var createdResult = Assert.IsType<CreatedAtActionResult>(resultado.Result);
+
+            // Assert: returned DTO:
+            var rdto = Assert.IsType<ReservaLeerDto>(createdResult.Value);
+            Assert.Equal(dto.Dni, rdto.Dni);
+            Assert.Equal(dto.InstalacionId, rdto.InstalacionId);
+            Assert.Equal(dto.FechaHora, rdto.FechaHora);
+            Assert.Equal(dto.NumeroAsistentes, rdto.NumeroAsistentes);
+
+            // Assert: navigation properties in returned DTO no lo pongo de momento
+
+            // Assert: persisted in database:
+            var reservaEnDb = await c.Reservas.FindAsync(rdto.ReservaId);
+            Assert.NotNull(reservaEnDb);
+            Assert.Equal(dto.Dni, reservaEnDb!.Dni);
+            Assert.Equal(dto.InstalacionId, reservaEnDb.InstalacionId);
+            Assert.Equal(dto.FechaHora, reservaEnDb.FechaHora);
+            Assert.Equal(dto.NumeroAsistentes, reservaEnDb.NumeroAsistentes);
+        }
     } // final de la clase
 } // final del namespace

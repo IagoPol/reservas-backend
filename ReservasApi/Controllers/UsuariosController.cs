@@ -19,7 +19,9 @@ namespace ReservasApi.Controllers
         }
 
         // POST (Create), GET (Read), PUT (Updaet), DELETE (idem) respecto de la tabla de usuarios:
-
+        // ESTE POST ESTÁ COMENTADO PORQUE YA NO ME HACE FALTA, YA QUE...
+        // ... QUEDA REEMPLAZADO POR AUTHSERVICE, AUTHCONTROLLER Y REGISTERDTO.
+        // El no haber puesto ese comentario me hizo perder hora y media el 1 dic de 8:00 a 9:30 intentando descrifrar por qué lo había comentado.
         /*
         // POST: api/usuarios
         [HttpPost]
